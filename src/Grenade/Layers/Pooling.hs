@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE StandaloneDeriving    #-}
@@ -8,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Core.Pooling
 Description : Max Pooling layer for 2D and 3D images
@@ -19,14 +21,15 @@ module Grenade.Layers.Pooling (
     Pooling (..)
   ) where
 
+import           Control.DeepSeq (NFData)
+import           GHC.Generics    (Generic)
 import           Data.Maybe
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons.TypeLits hiding (natVal)
-import           GHC.TypeLits
-import           Control.DeepSeq (NFData)
-import           GHC.Generics    (Generic)
 
+import           GHC.TypeLits
+import           Data.Kind (Type)
 
 import           Grenade.Core
 import           Grenade.Layers.Internal.Pooling
@@ -41,7 +44,7 @@ import           Numeric.LinearAlgebra.Static as LAS hiding ((|||), build, toRow
 --   The kernel size dictates which input and output sizes will "fit". Fitting the equation:
 --   `out = (in - kernel) / stride + 1` for both dimensions.
 --
-data Pooling :: Nat -> Nat -> Nat -> Nat -> * where
+data Pooling :: Nat -> Nat -> Nat -> Nat -> Type where
   Pooling :: Pooling kernelRows kernelColumns strideRows strideColumns
   deriving (NFData, Generic)
 

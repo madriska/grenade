@@ -63,7 +63,7 @@ executable             mnist
                      , optparse-applicative            >= 0.13       && < 0.15
                      , text                            == 1.2.*
                      , mtl                             >= 2.2.1      && < 2.3
-                     , hmatrix                         >= 0.18       && < 0.19
+                     , hmatrix                         >= 0.18       && < 0.20
                      , transformers
                      , semigroups
                      , singletons
@@ -82,7 +82,7 @@ executable             gan-mnist
                      , optparse-applicative            >= 0.13       && < 0.15
                      , text                            == 1.2.*
                      , mtl                             >= 2.2.1      && < 2.3
-                     , hmatrix                         >= 0.18       && < 0.19
+                     , hmatrix                         >= 0.18       && < 0.20
                      , transformers
                      , semigroups
                      , singletons
@@ -99,7 +99,7 @@ executable             recurrent
                      , optparse-applicative            >= 0.13       && < 0.15
                      , text                            == 1.2.*
                      , mtl                             >= 2.2.1      && < 2.3
-                     , hmatrix                         >= 0.18       && < 0.19
+                     , hmatrix                         >= 0.18       && < 0.20
                      , transformers
                      , semigroups
                      , singletons
@@ -117,7 +117,7 @@ executable             shakespeare
                      , optparse-applicative            >= 0.13       && < 0.15
                      , text                            == 1.2.*
                      , mtl                             >= 2.2.1      && < 2.3
-                     , hmatrix                         >= 0.18       && < 0.19
+                     , hmatrix                         >= 0.18       && < 0.20
                      , transformers
                      , semigroups
                      , singletons

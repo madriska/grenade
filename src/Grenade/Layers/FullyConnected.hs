@@ -1,10 +1,12 @@
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -24,6 +26,7 @@ import           System.Random.MWC               hiding (create)
 import           Control.Monad.Primitive         (PrimBase, PrimState)
 
 
+import           Data.Aeson
 import           Data.Proxy
 import           Data.Serialize
 
@@ -40,10 +43,21 @@ data FullyConnected i o = FullyConnected
                         !(FullyConnected' i o)   -- Neuron momentum
                         deriving (Generic, NFData)
 
+instance (KnownNat i, KnownNat o) => ToJSON (FullyConnected i o) where
+  toJSON (FullyConnected w m) =
+    object [ "_type" .= String "FullyConnected"
+           , "weight" .= w
+           , "momentum" .= m ]
+
 data FullyConnected' i o = FullyConnected'
                          !(R o)   -- Bias
                          !(L o i) -- Activations
                         deriving (Generic, NFData)
+
+instance (KnownNat i, KnownNat o) => ToJSON (FullyConnected' i o) where
+  toJSON (FullyConnected' b a) =
+    object [ "bias" .= extract b
+           , "activation" .= LA.toLists (extract a) ]
 
 instance Show (FullyConnected i o) where
   show FullyConnected {} = "FullyConnected"

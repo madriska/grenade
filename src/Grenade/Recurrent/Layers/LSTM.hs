@@ -1,15 +1,17 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE BangPatterns          #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE GADTs, DataKinds, PolyKinds, ScopedTypeVariables #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE PolyKinds             #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-# LANGUAGE ViewPatterns          #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
@@ -23,9 +25,14 @@ import           Control.Monad.Primitive           (PrimBase, PrimState)
 import           System.Random.MWC hiding (create)
 import GHC.TypeLits 
 
+import           Data.Aeson
 -- import           Data.List ( foldl1' )
 import           Data.Proxy
 import           Data.Serialize
+
+#if MIN_VERSION_base(4,9,0)
+import           Data.Kind (Type)
+#endif
 
 import qualified Numeric.LinearAlgebra as LA
 import           Numeric.LinearAlgebra.Static
@@ -40,14 +47,14 @@ import           Grenade.Layers.Internal.Update
 --   This is a Peephole formulation, so the recurrent shape is
 --   just the cell state, the previous output is not held or used
 --   at all.
-data LSTM :: Nat -> Nat -> * where
+data LSTM :: Nat -> Nat -> Type where
   LSTM :: ( KnownNat input
           , KnownNat output
           ) => !(LSTMWeights input output) -- Weights
             -> !(LSTMWeights input output) -- Momentums
             -> LSTM input output
 
-data LSTMWeights :: Nat -> Nat -> * where
+data LSTMWeights :: Nat -> Nat -> Type where
   LSTMWeights :: ( KnownNat input
                  , KnownNat output
                  ) => {
@@ -66,6 +73,28 @@ data LSTMWeights :: Nat -> Nat -> * where
 
 instance Show (LSTM i o) where
   show LSTM {} = "LSTM"
+
+instance ToJSON (LSTM i o) where
+  toJSON (LSTM w m) =
+    object [ "_type" .= String "LSTM"
+           , "weight" .= w
+           , "momentum" .= m
+           ]
+
+instance ToJSON (LSTMWeights i o) where
+  toJSON LSTMWeights{..} =
+    object [ "Wf" .= LA.toLists (extract lstmWf)
+           , "Uf" .= LA.toLists (extract lstmUf)
+           , "Bf" .= extract lstmBf
+           , "Wi" .= LA.toLists (extract lstmWi)
+           , "Ui" .= LA.toLists (extract lstmUi)
+           , "Bi" .= extract lstmBi
+           , "Wo" .= LA.toLists (extract lstmWo)
+           , "Uo" .= LA.toLists (extract lstmUo)
+           , "Bo" .= extract lstmBo
+           , "Wc" .= LA.toLists (extract lstmWc)
+           , "Bc" .= extract lstmBc
+           ]
 
 instance (KnownNat i, KnownNat o) => UpdateLayer (LSTM i o) where
   -- The gradients are the same shape as the weights and momentum

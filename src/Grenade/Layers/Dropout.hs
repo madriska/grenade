@@ -1,9 +1,11 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Grenade.Layers.Dropout (
     Dropout (..)
   , randomDropout
@@ -14,6 +16,8 @@ import           Control.Monad.Primitive (PrimBase, PrimState)
 import           System.Random.MWC
 
 import           GHC.Generics
+import           Data.Aeson
+import           Data.Serialize
 
 import           GHC.TypeLits
 import           Grenade.Core
@@ -39,6 +43,17 @@ instance RandomLayer Dropout where
 randomDropout :: PrimBase m
               => Double -> Gen (PrimState m) -> m Dropout
 randomDropout rate gen = Dropout rate <$> uniform gen
+
+instance Serialize Dropout where
+  put Dropout{..} = put dropoutRate >> put dropoutSeed
+  get = Dropout <$> get <*> get
+
+instance ToJSON Dropout where
+  toJSON Dropout{..} =
+    object [ "_type" .= String "Dropout"
+           , "rate" .= dropoutRate
+           , "seed" .= dropoutSeed
+           ]
 
 instance (KnownNat i) => Layer Dropout ('D1 i) ('D1 i) where
   type Tape Dropout ('D1 i) ('D1 i) = ()

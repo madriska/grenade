@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE KindSignatures        #-}
@@ -7,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Core.Shape
 Description : Dependently typed shapes of data which are passed between layers of a network
@@ -31,11 +33,15 @@ import           System.Random.MWC
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons
-import           Data.Singletons.TypeLits hiding (natVal)
+import           Data.Singletons.TypeLits
 import           Data.Vector.Storable ( Vector )
 import qualified Data.Vector.Storable as V
 
+#if MIN_VERSION_base(4,11,0)
+import           GHC.TypeLits hiding (natVal)
+#else
 import           GHC.TypeLits
+#endif
 
 import qualified Numeric.LinearAlgebra.Static as H
 import           Numeric.LinearAlgebra.Static

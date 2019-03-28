@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
@@ -38,9 +39,15 @@ import           Control.DeepSeq
 import           Control.Monad.Primitive           (PrimBase, PrimState)
 import           System.Random.MWC
 
+import           Data.Aeson
 import           Data.Serialize
 import           Data.Singletons
 import           Data.Singletons.Prelude
+import qualified Data.Vector as V
+
+#if MIN_VERSION_base(4,9,0)
+import           Data.Kind (Type)
+#endif
 
 import           Grenade.Core.Layer
 import           Grenade.Core.LearningParameters
@@ -55,7 +62,7 @@ import           Grenade.Core.WeightInitialization
 --
 --   Can be considered to be a heterogeneous list of layers which are able to
 --   transform the data shapes of the network.
-data Network :: [*] -> [Shape] -> * where
+data Network :: [Type] -> [Shape] -> Type where
     NNil  :: SingI i
           => Network '[] '[i]
 
@@ -79,7 +86,7 @@ instance (NFData x, NFData (Network xs rs)) => NFData (Network (x ': xs) (i ': r
 -- | Gradient of a network.
 --
 --   Parameterised on the layers of the network.
-data Gradients :: [*] -> * where
+data Gradients :: [Type] -> Type where
    GNil  :: Gradients '[]
 
    (:/>) :: UpdateLayer x
@@ -95,7 +102,7 @@ instance (NFData (Gradient x), NFData (Gradients xs)) => NFData (Gradients (x ':
 -- | Wegnert Tape of a network.
 --
 --   Parameterised on the layers and shapes of the network.
-data Tapes :: [*] -> [Shape] -> * where
+data Tapes :: [Type] -> [Shape] -> Type where
    TNil  :: SingI i
          => Tapes '[] '[i]
 
@@ -175,7 +182,7 @@ applyUpdate _ NNil GNil
 
 -- | A network can easily be created by hand with (:~>), but an easy way to
 --   initialise a random network is with the randomNetwork.
-class CreatableNetwork (xs :: [*]) (ss :: [Shape]) where
+class CreatableNetwork (xs :: [Type]) (ss :: [Shape]) where
   -- | Create a network with randomly initialised weights.
   --
   --   Calls to this function will not compile if the type of the neural
@@ -206,6 +213,15 @@ instance (SingI i, SingI o, Layer x i o, Serialize x, Serialize (Network xs (o '
   put (x :~> r) = put x >> put r
   get = (:~>) <$> get <*> get
 
+instance ToJSON (Network '[] '[i]) where
+  toJSON NNil = Array (V.fromList [])
+
+instance (ToJSON x, ToJSON (Network xs (o ': rs)))
+      => ToJSON (Network (x ': xs) (i ': o ': rs)) where
+  toJSON (x :~> r) =
+    case toJSON r of
+      Array jr -> Array $ V.cons (toJSON x) jr
+      _ -> error "Expected toJSON to be an array"
 
 -- | Ultimate composition.
 --

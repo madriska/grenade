@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE GADTs                 #-}
@@ -7,6 +8,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Layers.Crop
 Description : Cropping layer
@@ -21,8 +23,15 @@ module Grenade.Layers.Crop (
 import           Data.Maybe
 import           Data.Proxy
 import           Data.Serialize
-import           Data.Singletons.TypeLits hiding (natVal)
+import           Data.Singletons.TypeLits
+#if MIN_VERSION_base(4,11,0)
+import           GHC.TypeLits hiding (natVal)
+#else
 import           GHC.TypeLits
+#endif
+#if MIN_VERSION_base(4,9,0)
+import           Data.Kind (Type)
+#endif
 import           GHC.Generics (Generic)
 import           Control.DeepSeq (NFData)
 
@@ -36,7 +45,7 @@ import           Numeric.LinearAlgebra.Static (extract, create)
 data Crop :: Nat
           -> Nat
           -> Nat
-          -> Nat -> * where
+          -> Nat -> Type where
   Crop :: Crop cropLeft cropTop cropRight cropBottom
   deriving (Generic,NFData)
 

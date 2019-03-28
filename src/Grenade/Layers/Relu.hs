@@ -1,9 +1,10 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-|
 Module      : Grenade.Layers.Relu
 Description : Rectifying linear unit layer
@@ -15,6 +16,7 @@ module Grenade.Layers.Relu (
     Relu (..)
   ) where
 
+import           Data.Aeson
 import           Data.Serialize
 
 import           Control.DeepSeq              (NFData (..))
@@ -29,6 +31,9 @@ import qualified Numeric.LinearAlgebra.Static as LAS
 --   diode on every neuron individually.
 data Relu = Relu
   deriving (Generic, NFData, Show)
+
+instance ToJSON Relu where
+  toJSON _ = object ["_type" .= String "Relu"]
 
 instance UpdateLayer Relu where
   type Gradient Relu = ()

@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE RecordWildCards       #-}
@@ -8,6 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Layers.Deconvolution
 Description : Deconvolution layer
@@ -27,14 +29,16 @@ module Grenade.Layers.Deconvolution (
   , Deconvolution' (..)
   ) where
 
+import           Control.DeepSeq (NFData (..))
 import           Data.Maybe
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons.TypeLits hiding (natVal)
 
 import           GHC.TypeLits
-import Control.DeepSeq (NFData (..))
-
+#if MIN_VERSION_base(4,9,0)
+import           Data.Kind (Type)
+#endif
 
 import           Numeric.LinearAlgebra hiding ( uniformSample, konst )
 import qualified Numeric.LinearAlgebra as LA
@@ -56,7 +60,7 @@ data Deconvolution :: Nat -- Number of channels, for the first layer this could 
                    -> Nat -- The number of column in the kernel filter
                    -> Nat -- The row stride of the Deconvolution filter
                    -> Nat -- The columns stride of the Deconvolution filter
-                   -> * where
+                   -> Type where
   Deconvolution :: ( KnownNat channels
                    , KnownNat filters
                    , KnownNat kernelRows
@@ -79,7 +83,7 @@ data Deconvolution' :: Nat -- Number of channels, for the first layer this could
                     -> Nat -- The number of column in the kernel filter
                     -> Nat -- The row stride of the Deconvolution filter
                     -> Nat -- The columns stride of the Deconvolution filter
-                    -> * where
+                    -> Type where
   Deconvolution' :: ( KnownNat channels
                   , KnownNat filters
                   , KnownNat kernelRows

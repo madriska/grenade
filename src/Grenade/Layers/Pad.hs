@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
@@ -7,6 +8,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Core.Pad
 Description : Padding layer for 2D and 3D images
@@ -18,14 +20,15 @@ module Grenade.Layers.Pad (
     Pad (..)
   ) where
 
+import           Control.DeepSeq
 import           Data.Maybe
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons.TypeLits hiding (natVal)
-import           GHC.TypeLits
-import GHC.Generics
-import Control.DeepSeq
 
+import           GHC.TypeLits
+import           Data.Kind (Type)
+import           GHC.Generics
 
 import           Grenade.Core
 import           Grenade.Layers.Internal.Pad
@@ -39,7 +42,7 @@ import           Numeric.LinearAlgebra.Static (extract, create)
 data Pad  :: Nat
           -> Nat
           -> Nat
-          -> Nat -> * where
+          -> Nat -> Type where
   Pad  :: Pad padLeft padTop padRight padBottom
   deriving (NFData, Generic)
 

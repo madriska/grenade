@@ -1,6 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP                   #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE RecordWildCards       #-}
@@ -10,6 +11,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances  #-}
 {-|
 Module      : Grenade.Layers.Convolution
 Description : Convolution layer
@@ -25,14 +27,14 @@ module Grenade.Layers.Convolution (
   , Convolution' (..)
   ) where
 
+import           Control.DeepSeq              (NFData (..))
 import           Data.Maybe
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons.TypeLits hiding (natVal)
 
 import           GHC.TypeLits
-import           Control.DeepSeq              (NFData (..))
-
+import           Data.Kind (Type)
 
 import           Numeric.LinearAlgebra hiding ( uniformSample, konst )
 import qualified Numeric.LinearAlgebra as LA
@@ -59,7 +61,7 @@ data Convolution :: Nat -- Number of channels, for the first layer this could be
                  -> Nat -- The number of column in the kernel filter
                  -> Nat -- The row stride of the convolution filter
                  -> Nat -- The columns stride of the convolution filter
-                 -> * where
+                 -> Type where
   Convolution :: ( KnownNat channels
                  , KnownNat filters
                  , KnownNat kernelRows
@@ -82,7 +84,7 @@ data Convolution' :: Nat -- Number of channels, for the first layer this could b
                   -> Nat -- The number of column in the kernel filter
                   -> Nat -- The row stride of the convolution filter
                   -> Nat -- The columns stride of the convolution filter
-                  -> * where
+                  -> Type where
   Convolution' :: ( KnownNat channels
                   , KnownNat filters
                   , KnownNat kernelRows
