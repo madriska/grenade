@@ -2,6 +2,7 @@
 {-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeOperators         #-}
@@ -19,6 +20,7 @@ module Grenade.Recurrent.Layers.LSTM (
 
 import           Control.Monad.Random ( MonadRandom, getRandom )
 
+import           Data.Aeson
 -- import           Data.List ( foldl1' )
 import           Data.Proxy
 import           Data.Serialize
@@ -67,6 +69,28 @@ data LSTMWeights :: Nat -> Nat -> Type where
 
 instance Show (LSTM i o) where
   show LSTM {} = "LSTM"
+
+instance ToJSON (LSTM i o) where
+  toJSON (LSTM w m) =
+    object [ "_type" .= String "LSTM"
+           , "weight" .= w
+           , "momentum" .= m
+           ]
+
+instance ToJSON (LSTMWeights i o) where
+  toJSON LSTMWeights{..} =
+    object [ "Wf" .= LA.toLists (extract lstmWf)
+           , "Uf" .= LA.toLists (extract lstmUf)
+           , "Bf" .= extract lstmBf
+           , "Wi" .= LA.toLists (extract lstmWi)
+           , "Ui" .= LA.toLists (extract lstmUi)
+           , "Bi" .= extract lstmBi
+           , "Wo" .= LA.toLists (extract lstmWo)
+           , "Uo" .= LA.toLists (extract lstmUo)
+           , "Bo" .= extract lstmBo
+           , "Wc" .= LA.toLists (extract lstmWc)
+           , "Bc" .= extract lstmBc
+           ]
 
 instance (KnownNat i, KnownNat o) => UpdateLayer (LSTM i o) where
   -- The gradients are the same shape as the weights and momentum

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -13,6 +14,7 @@ module Grenade.Layers.Relu (
     Relu (..)
   ) where
 
+import           Data.Aeson
 import           Data.Serialize
 
 import           GHC.TypeLits
@@ -25,6 +27,9 @@ import qualified Numeric.LinearAlgebra.Static as LAS
 --   diode on every neuron individually.
 data Relu = Relu
   deriving Show
+
+instance ToJSON Relu where
+  toJSON _ = object ["_type" .= String "Relu"]
 
 instance UpdateLayer Relu where
   type Gradient Relu = ()

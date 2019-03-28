@@ -29,9 +29,11 @@ module Grenade.Recurrent.Core.Network (
 
 
 import           Control.Monad.Random ( MonadRandom )
+import           Data.Aeson
 import           Data.Singletons ( SingI )
 import           Data.Singletons.Prelude ( Head, Last )
 import           Data.Serialize
+import qualified Data.Vector as V
 
 #if MIN_VERSION_base(4,9,0)
 import           Data.Kind (Type)
@@ -242,6 +244,21 @@ instance (SingI i, RecurrentLayer x i o, Serialize x, Serialize (RecurrentNetwor
   put (x :~@> r) = put x >> put r
   get = (:~@>) <$> get <*> get
 
+instance ToJSON (RecurrentNetwork '[] '[i]) where
+  toJSON RNil = Array (V.fromList [])
+
+instance (ToJSON x, ToJSON (RecurrentNetwork xs (o ': rs)))
+      => ToJSON (RecurrentNetwork (FeedForward x ': xs) (i ': o ': rs)) where
+  toJSON (x :~~> r) = case toJSON r of
+    Array jr -> Array $ V.cons (toJSON x) jr
+    _ -> error "Expected toJSON to yield an array"
+
+instance (ToJSON x, ToJSON (RecurrentNetwork xs (o ': rs)))
+      => ToJSON (RecurrentNetwork (Recurrent x ': xs) (i ': o ': rs)) where
+  toJSON (x :~@> r) = case toJSON r of
+    Array jr -> Array $ V.cons (toJSON x) jr
+    _ -> error "Expected toJSON to yield an array"
+
 instance (Serialize (RecurrentInputs '[])) where
   put _ = return ()
   get = return RINil
@@ -253,6 +270,22 @@ instance (UpdateLayer x, Serialize (RecurrentInputs ys), Fractional (RecurrentIn
 instance (Serialize (RecurrentShape x), Fractional (RecurrentShape x), RecurrentUpdateLayer x, Serialize (RecurrentInputs ys), Fractional (RecurrentInputs ys)) => (Serialize (RecurrentInputs (Recurrent x ': ys))) where
   put ( i :~@+> rest ) = put i >> put rest
   get = (:~@+>) <$> get <*> get
+
+instance ToJSON (RecurrentInputs '[]) where
+  toJSON _ = Array $ V.fromList []
+
+instance ToJSON (RecurrentInputs ys)
+      => ToJSON (RecurrentInputs (FeedForward x ': ys)) where
+  toJSON ( () :~~+> rest) = case toJSON rest of
+    Array jr -> Array $ Null `V.cons` jr
+    _ -> error "Expected toJSON to yield an array"
+
+instance (ToJSON (RecurrentShape x), ToJSON (RecurrentInputs ys))
+      => ToJSON (RecurrentInputs (Recurrent x ': ys)) where
+  toJSON ( i :~@+> rest ) = case toJSON rest of
+    Array jr -> Array $ toJSON i `V.cons` jr
+    _ -> error "Expected toJSON to yield an array"
+
 
 
 -- Num instance for `RecurrentInputs layers`

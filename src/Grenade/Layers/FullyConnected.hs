@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -12,6 +13,7 @@ module Grenade.Layers.FullyConnected (
 
 import           Control.Monad.Random hiding (fromList)
 
+import           Data.Aeson
 import           Data.Proxy
 import           Data.Serialize
 import           Data.Singletons.TypeLits
@@ -28,9 +30,20 @@ data FullyConnected i o = FullyConnected
                         !(FullyConnected' i o)   -- Neuron weights
                         !(FullyConnected' i o)   -- Neuron momentum
 
+instance (KnownNat i, KnownNat o) => ToJSON (FullyConnected i o) where
+  toJSON (FullyConnected w m) =
+    object [ "_type" .= String "FullyConnected"
+           , "weight" .= w
+           , "momentum" .= m ]
+
 data FullyConnected' i o = FullyConnected'
                          !(R o)   -- Bias
                          !(L o i) -- Activations
+
+instance (KnownNat i, KnownNat o) => ToJSON (FullyConnected' i o) where
+  toJSON (FullyConnected' b a) =
+    object [ "bias" .= extract b
+           , "activation" .= LA.toLists (extract a) ]
 
 instance Show (FullyConnected i o) where
   show FullyConnected {} = "FullyConnected"

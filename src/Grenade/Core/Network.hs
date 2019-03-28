@@ -33,9 +33,11 @@ module Grenade.Core.Network (
 
 import           Control.Monad.Random ( MonadRandom )
 
+import           Data.Aeson
 import           Data.Singletons
 import           Data.Singletons.Prelude
 import           Data.Serialize
+import qualified Data.Vector as V
 
 #if MIN_VERSION_base(4,9,0)
 import           Data.Kind (Type)
@@ -179,6 +181,15 @@ instance (SingI i, SingI o, Layer x i o, Serialize x, Serialize (Network xs (o '
   put (x :~> r) = put x >> put r
   get = (:~>) <$> get <*> get
 
+instance ToJSON (Network '[] '[i]) where
+  toJSON NNil = Array (V.fromList [])
+
+instance (ToJSON x, ToJSON (Network xs (o ': rs)))
+      => ToJSON (Network (x ': xs) (i ': o ': rs)) where
+  toJSON (x :~> r) =
+    case toJSON r of
+      Array jr -> Array $ V.cons (toJSON x) jr
+      _ -> error "Expected toJSON to be an array"
 
 -- | Ultimate composition.
 --

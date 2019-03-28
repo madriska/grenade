@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -8,6 +10,8 @@ module Grenade.Layers.Dropout (
   ) where
 
 import           Control.Monad.Random hiding (fromList)
+import           Data.Aeson
+import           Data.Serialize
 
 import           GHC.TypeLits
 import           Grenade.Core
@@ -26,6 +30,17 @@ instance UpdateLayer Dropout where
   type Gradient Dropout = ()
   runUpdate _ x _ = x
   createRandom = randomDropout 0.95
+
+instance Serialize Dropout where
+  put Dropout{..} = put dropoutRate >> put dropoutSeed
+  get = Dropout <$> get <*> get
+
+instance ToJSON Dropout where
+  toJSON Dropout{..} =
+    object [ "_type" .= String "Dropout"
+           , "rate" .= dropoutRate
+           , "seed" .= dropoutSeed
+           ]
 
 randomDropout :: MonadRandom m
               => Double -> m Dropout
