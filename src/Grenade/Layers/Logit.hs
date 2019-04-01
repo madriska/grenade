@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 {-|
@@ -17,6 +18,7 @@ module Grenade.Layers.Logit (
   ) where
 
 
+import           Data.Aeson
 import           Data.Serialize
 import           Data.Singletons
 
@@ -33,6 +35,9 @@ import           Grenade.Core
 --   problems.
 data Logit = Logit
   deriving (Generic,NFData,Show)
+
+instance ToJSON Logit where
+  toJSON _ = object ["_type" .= String "Logit"]
 
 instance UpdateLayer Logit where
   type Gradient Logit = ()
